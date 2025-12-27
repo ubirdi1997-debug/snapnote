@@ -37,3 +37,5 @@ sudo apt-get install imagemagick  # On Ubuntu/Debian
 brew install imagemagick          # On macOS
 ```
 
+
+
