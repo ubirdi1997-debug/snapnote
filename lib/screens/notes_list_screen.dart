@@ -18,22 +18,14 @@ class NotesListScreen extends StatefulWidget {
   State<NotesListScreen> createState() => _NotesListScreenState();
 }
 
-class _NotesListScreenState extends State<NotesListScreen> with SingleTickerProviderStateMixin {
+class _NotesListScreenState extends State<NotesListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final VoiceService _voiceService = VoiceService();
   bool _isVoiceInitialized = false;
-  late TabController _tabController;
-  int _selectedTab = 0;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _selectedTab = _tabController.index;
-      });
-    });
     _initializeVoice();
   }
 
@@ -47,7 +39,6 @@ class _NotesListScreenState extends State<NotesListScreen> with SingleTickerProv
   @override
   void dispose() {
     _searchController.dispose();
-    _tabController.dispose();
     _voiceService.cancel();
     super.dispose();
   }
@@ -104,13 +95,11 @@ class _NotesListScreenState extends State<NotesListScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A0D2E), // Dark purple background
       appBar: AppBar(
         title: const Text('SnapNote Voice'),
-        backgroundColor: const Color(0xFF1A0D2E),
-        foregroundColor: Colors.white,
-        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -123,53 +112,88 @@ class _NotesListScreenState extends State<NotesListScreen> with SingleTickerProv
             },
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFF9D7CE8),
-          labelColor: const Color(0xFF9D7CE8),
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(text: 'Notes'),
-            Tab(text: 'Lists'),
-            Tab(text: 'Recordings'),
-          ],
-        ),
       ),
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF9D7CE8).withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
+          // Search bar - only show in light mode
+          if (!isDarkMode)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: TextField(
                 controller: _searchController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Search note',
-                  hintStyle: TextStyle(color: Colors.white70),
-                  prefixIcon: Icon(Icons.search, color: Colors.white70),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: InputDecoration(
+                  hintText: 'Search notes...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
                 onChanged: (value) {
                   context.read<NotesProvider>().setSearchQuery(value);
                 },
               ),
             ),
-          ),
-          // Content based on tab
+          // Notes grid
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildNotesTab(),
-                _buildListsTab(),
-                _buildRecordingsTab(),
-              ],
+            child: Consumer<NotesProvider>(
+              builder: (context, provider, child) {
+                final notes = provider.notes;
+
+                if (notes.isEmpty) {
+                  return RefreshIndicator(
+                    onRefresh: _refreshNotes,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height - 200,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.note_add_outlined,
+                                size: 64,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                provider.searchQuery.isEmpty
+                                    ? 'No notes yet\nTap + to create your first note'
+                                    : 'No notes found',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: _refreshNotes,
+                  child: GridView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemCount: notes.length,
+                    itemBuilder: (context, index) {
+                      final note = notes[index];
+                      return _NoteTile(note: note);
+                    },
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -180,15 +204,13 @@ class _NotesListScreenState extends State<NotesListScreen> with SingleTickerProv
           FloatingActionButton(
             heroTag: "voice",
             onPressed: _quickVoiceNote,
-            backgroundColor: const Color(0xFF9D7CE8),
-            child: const Icon(Icons.mic, color: Colors.white),
+            child: const Icon(Icons.mic),
           ),
           const SizedBox(height: 12),
           FloatingActionButton(
             heroTag: "camera",
             onPressed: _quickCameraNote,
-            backgroundColor: const Color(0xFF6B46C1),
-            child: const Icon(Icons.camera_alt, color: Colors.white),
+            child: const Icon(Icons.camera_alt),
           ),
           const SizedBox(height: 12),
           FloatingActionButton(
@@ -202,117 +224,9 @@ class _NotesListScreenState extends State<NotesListScreen> with SingleTickerProv
                 ),
               );
             },
-            backgroundColor: Colors.white,
-            child: const Icon(Icons.add, color: Color(0xFF1A0D2E)),
+            child: const Icon(Icons.add),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildNotesTab() {
-    return Consumer<NotesProvider>(
-      builder: (context, provider, child) {
-        final notes = provider.notes.where((note) => note.todoItems.isEmpty).toList();
-
-        if (notes.isEmpty) {
-          return RefreshIndicator(
-            onRefresh: _refreshNotes,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height - 200,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.note_add_outlined,
-                        size: 64,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        provider.searchQuery.isEmpty
-                            ? 'No notes yet\nTap + to create your first note'
-                            : 'No notes found',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: _refreshNotes,
-          child: GridView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.85,
-            ),
-            itemCount: notes.length,
-            itemBuilder: (context, index) {
-              final note = notes[index];
-              return _NoteTile(note: note);
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildListsTab() {
-    return Consumer<NotesProvider>(
-      builder: (context, provider, child) {
-        final lists = provider.notes.where((note) => note.todoItems.isNotEmpty).toList();
-
-        if (lists.isEmpty) {
-          return Center(
-            child: Text(
-              'No lists yet',
-              style: TextStyle(color: Colors.white.withOpacity(0.6)),
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: _refreshNotes,
-          child: GridView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.85,
-            ),
-            itemCount: lists.length,
-            itemBuilder: (context, index) {
-              final note = lists[index];
-              return _NoteTile(note: note);
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRecordingsTab() {
-    return Center(
-      child: Text(
-        'Recordings will appear here',
-        style: TextStyle(color: Colors.white.withOpacity(0.6)),
       ),
     );
   }
@@ -384,9 +298,8 @@ class _NoteTile extends StatelessWidget {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              backgroundColor: const Color(0xFF2D1B4E),
-              title: const Text('Delete Note', style: TextStyle(color: Colors.white)),
-              content: const Text('Are you sure you want to delete this note?', style: TextStyle(color: Colors.white70)),
+              title: const Text('Delete Note'),
+              content: const Text('Are you sure you want to delete this note?'),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -402,7 +315,7 @@ class _NoteTile extends StatelessWidget {
                     Navigator.pop(context);
                   },
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
+                    foregroundColor: Theme.of(context).colorScheme.error,
                   ),
                   child: const Text('Delete'),
                 ),
