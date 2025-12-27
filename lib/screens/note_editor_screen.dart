@@ -427,6 +427,84 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     }
   }
 
+  void _showAddTagDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Tag'),
+        content: TextField(
+          controller: _tagController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter tag name',
+            border: OutlineInputBorder(),
+          ),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (value) {
+            _addTag(value);
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              _addTag(_tagController.text);
+              Navigator.pop(context);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showColorPicker() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Color'),
+        content: Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          alignment: WrapAlignment.center,
+          children: NoteColors.presetColors.map((color) {
+            final isSelected = _colorValue == color.value;
+            return GestureDetector(
+              onTap: () {
+                _changeColor(color);
+                Navigator.pop(context);
+              },
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected 
+                        ? Theme.of(context).colorScheme.primary 
+                        : Colors.grey.withOpacity(0.3),
+                    width: isSelected ? 4 : 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Icon(
+                        Icons.check,
+                        color: Theme.of(context).colorScheme.primary,
+                      )
+                    : null,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -443,63 +521,53 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     final charCount = _getCharacterCount(totalText);
 
     return Scaffold(
+      backgroundColor: Color(_colorValue),
       appBar: AppBar(
         backgroundColor: Color(_colorValue),
-        title: Text(widget.noteId == null ? 'New Note' : 'Edit Note'),
+        elevation: 0,
+        iconTheme: IconThemeData(
+          color: Colors.black87,
+        ),
+        title: Text(
+          widget.noteId == null ? 'New Note' : 'Edit Note',
+          style: TextStyle(color: Colors.black87),
+        ),
         actions: [
           IconButton(
-            icon: Icon(_isPinned ? Icons.push_pin : Icons.push_pin_outlined),
+            icon: Icon(
+              _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+              color: _isPinned ? Theme.of(context).colorScheme.primary : Colors.black87,
+            ),
             onPressed: _togglePin,
             tooltip: _isPinned ? 'Unpin note' : 'Pin note',
-            color: _isPinned ? Theme.of(context).colorScheme.primary : null,
-          ),
-          PopupMenuButton(
-            icon: const Icon(Icons.palette),
-            tooltip: 'Change color',
-            itemBuilder: (context) => NoteColors.presetColors.map((color) {
-              return PopupMenuItem(
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: _colorValue == color.value
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey,
-                      width: _colorValue == color.value ? 3 : 1,
-                    ),
-                  ),
-                ),
-                onTap: () => _changeColor(color),
-              );
-            }).toList(),
           ),
           if (_undoStack.length > 1)
             IconButton(
-              icon: const Icon(Icons.undo),
+              icon: const Icon(Icons.undo, color: Colors.black87),
               onPressed: _undo,
               tooltip: 'Undo',
             ),
           if (_redoStack.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.redo),
+              icon: const Icon(Icons.redo, color: Colors.black87),
               onPressed: _redo,
               tooltip: 'Redo',
             ),
           IconButton(
-            icon: Icon(_isLocked ? Icons.lock : Icons.lock_open),
+            icon: Icon(
+              _isLocked ? Icons.lock : Icons.lock_open,
+              color: Colors.black87,
+            ),
             onPressed: _toggleLock,
             tooltip: _isLocked ? 'Unlock note' : 'Lock note',
           ),
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.share, color: Colors.black87),
             onPressed: _shareNote,
             tooltip: 'Share note',
           ),
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: const Icon(Icons.save, color: Colors.black87),
             onPressed: _saveNote,
             tooltip: 'Save',
           ),
@@ -546,16 +614,17 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                     decoration: const InputDecoration(
                       hintText: 'Title',
                       border: InputBorder.none,
-                      hintStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      hintStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black54),
                     ),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                     textCapitalization: TextCapitalization.sentences,
                     enabled: !_isLocked,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   // Tags
                   if (_tags.isNotEmpty) ...[
                     Wrap(
@@ -566,40 +635,14 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                           label: Text(tag),
                           onDeleted: _isLocked ? null : () => _removeTag(tag),
                           deleteIcon: const Icon(Icons.close, size: 18),
+                          backgroundColor: Colors.black.withOpacity(0.1),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                   ],
-                  // Add tag input
-                  if (!_isLocked)
-                    TextField(
-                      controller: _tagController,
-                      decoration: InputDecoration(
-                        hintText: 'Add tag (press Enter)',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        prefixIcon: const Icon(Icons.tag),
-                        suffixIcon: _tagController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: () => _addTag(_tagController.text),
-                              )
-                            : null,
-                      ),
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (value) => _addTag(value),
-                      onChanged: (value) => setState(() {}),
-                    ),
-                  if (!_isLocked) const SizedBox(height: 16),
                   // Todo items
                   if (_todoItems.isNotEmpty) ...[
-                    const Text(
-                      'To-do List',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
                     ...List.generate(_todoItems.length, (index) {
                       final item = _todoItems[index];
                       return Padding(
@@ -625,6 +668,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                                 enabled: !_isLocked,
                                 onChanged: (value) => _updateTodoItem(index, value),
                                 style: TextStyle(
+                                  color: Colors.black87,
                                   decoration: item.isCompleted
                                       ? TextDecoration.lineThrough
                                       : null,
@@ -633,7 +677,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                             ),
                             if (!_isLocked)
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, size: 20),
+                                icon: const Icon(Icons.delete_outline, size: 20, color: Colors.black54),
                                 onPressed: () => _removeTodoItem(index),
                               ),
                           ],
@@ -647,21 +691,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                         label: const Text('Add to-do item'),
                       ),
                     const SizedBox(height: 16),
-                  ] else if (!_isLocked) ...[
-                    TextButton.icon(
-                      onPressed: _addTodoItem,
-                      icon: const Icon(Icons.check_box_outlined),
-                      label: const Text('Add to-do list'),
-                    ),
-                    const SizedBox(height: 16),
                   ],
                   // Images
                   if (_imagePaths.isNotEmpty) ...[
-                    const Text(
-                      'Images',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
                     SizedBox(
                       height: 120,
                       child: ListView.builder(
@@ -708,8 +740,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                   TextField(
                     controller: _bodyController,
                     decoration: const InputDecoration(
-                      hintText: 'Start typing or use voice/camera...',
+                      hintText: 'Start typing...',
                       border: InputBorder.none,
+                      hintStyle: TextStyle(color: Colors.black54),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
                     ),
                     maxLines: null,
                     expands: false,
@@ -720,67 +757,60 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Words: $wordCount | Characters: $charCount',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (_isLocked && _lockedAt != null)
-                  Text(
-                    'Locked ${_formatLockTime(_lockedAt!)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SafeArea(
-            child: Container(
-              padding: const EdgeInsets.all(16),
+          // Formatting toolbar at bottom
+          if (!_isLocked)
+            Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: Color(_colorValue),
                 border: Border(
                   top: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                    color: Colors.black.withOpacity(0.1),
+                    width: 1,
                   ),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _ActionButton(
-                    icon: Icons.mic,
-                    label: 'Voice',
-                    onPressed: _isListening ? _stopVoiceInput : _startVoiceInput,
-                    isActive: _isListening,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _ToolbarButton(
+                        icon: Icons.mic,
+                        label: 'Voice',
+                        onPressed: _isListening ? _stopVoiceInput : _startVoiceInput,
+                        isActive: _isListening,
+                      ),
+                      _ToolbarButton(
+                        icon: Icons.camera_alt,
+                        label: 'Camera',
+                        onPressed: _openCamera,
+                      ),
+                      _ToolbarButton(
+                        icon: Icons.image,
+                        label: 'Gallery',
+                        onPressed: _pickImageFromGallery,
+                      ),
+                      _ToolbarButton(
+                        icon: Icons.check_box_outlined,
+                        label: 'Todo',
+                        onPressed: _addTodoItem,
+                      ),
+                      _ToolbarButton(
+                        icon: Icons.label_outline,
+                        label: 'Tag',
+                        onPressed: _showAddTagDialog,
+                      ),
+                      _ToolbarButton(
+                        icon: Icons.palette_outlined,
+                        label: 'Color',
+                        onPressed: _showColorPicker,
+                      ),
+                    ],
                   ),
-                  _ActionButton(
-                    icon: Icons.camera_alt,
-                    label: 'Camera',
-                    onPressed: _openCamera,
-                  ),
-                  _ActionButton(
-                    icon: Icons.image,
-                    label: 'Gallery',
-                    onPressed: _pickImageFromGallery,
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -802,13 +832,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _ToolbarButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
   final bool isActive;
 
-  const _ActionButton({
+  const _ToolbarButton({
     required this.icon,
     required this.label,
     required this.onPressed,
@@ -819,31 +849,28 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isActive
-                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                  : Theme.of(context).colorScheme.onSurface,
+              size: 24,
+              color: isActive 
+                  ? Theme.of(context).colorScheme.primary 
+                  : Colors.black87,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isActive
-                    ? Theme.of(context).colorScheme.onPrimaryContainer
-                    : Theme.of(context).colorScheme.onSurface,
+                fontSize: 11,
+                color: isActive 
+                    ? Theme.of(context).colorScheme.primary 
+                    : Colors.black87,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],

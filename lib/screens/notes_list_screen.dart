@@ -115,26 +115,78 @@ class _NotesListScreenState extends State<NotesListScreen> {
       ),
       body: Column(
         children: [
-          // Search bar - only show in light mode
-          if (!isDarkMode)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search notes...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search notes...',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
-                onChanged: (value) {
-                  context.read<NotesProvider>().setSearchQuery(value);
-                },
               ),
+              onChanged: (value) {
+                context.read<NotesProvider>().setSearchQuery(value);
+              },
             ),
+          ),
+          // Tags filter at top
+          Consumer<NotesProvider>(
+            builder: (context, provider, child) {
+              final tags = provider.allTags;
+              final selectedTag = provider.selectedTag;
+
+              if (tags.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              return Container(
+                height: 50,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    // "All" tag
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: const Text('All'),
+                        selected: selectedTag == null,
+                        onSelected: (selected) {
+                          HapticFeedback.lightImpact();
+                          provider.setSelectedTag(null);
+                        },
+                        selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                        checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    // Individual tags
+                    ...tags.map((tag) {
+                      final isSelected = selectedTag == tag;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(tag),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            HapticFeedback.lightImpact();
+                            provider.setSelectedTag(selected ? tag : null);
+                          },
+                          selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                          checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
           // Notes grid
           Expanded(
             child: Consumer<NotesProvider>(
@@ -159,7 +211,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                provider.searchQuery.isEmpty
+                                provider.searchQuery.isEmpty && provider.selectedTag == null
                                     ? 'No notes yet\nTap + to create your first note'
                                     : 'No notes found',
                                 textAlign: TextAlign.center,
@@ -182,9 +234,9 @@ class _NotesListScreenState extends State<NotesListScreen> {
                     padding: const EdgeInsets.all(16),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.85,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.75,
                     ),
                     itemCount: notes.length,
                     itemBuilder: (context, index) {
@@ -198,35 +250,19 @@ class _NotesListScreenState extends State<NotesListScreen> {
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: "voice",
-            onPressed: _quickVoiceNote,
-            child: const Icon(Icons.mic),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: "camera",
-            onPressed: _quickCameraNote,
-            child: const Icon(Icons.camera_alt),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: "add",
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const NoteEditorScreen(),
-                ),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          HapticFeedback.mediumImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const NoteEditorScreen(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('New Note'),
+        elevation: 4,
       ),
     );
   }
@@ -260,7 +296,7 @@ class _NoteTile extends StatelessWidget {
 
   String _getPreview() {
     if (note.body.isEmpty) {
-      return note.title.isEmpty ? '' : '';
+      return '';
     }
     
     final lines = note.body.split('\n');
@@ -276,9 +312,12 @@ class _NoteTile extends StatelessWidget {
     final displayTitle = note.title.isNotEmpty ? note.title : 'Untitled';
     final preview = _getPreview();
     final noteColor = note.color;
+    final hasTodos = note.todoItems.isNotEmpty;
+    final completedTodos = note.todoItems.where((item) => item.isCompleted).length;
+    final totalTodos = note.todoItems.length;
 
     return Card(
-      elevation: 0,
+      elevation: 2,
       color: noteColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -330,6 +369,7 @@ class _NoteTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Header with title and pin
               Row(
                 children: [
                   Expanded(
@@ -352,49 +392,86 @@ class _NoteTile extends StatelessWidget {
                     ),
                 ],
               ),
-              if (preview.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Expanded(
-                  child: Text(
-                    preview,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+              const SizedBox(height: 8),
+              // Tags
               if (note.tags.isNotEmpty) ...[
-                const SizedBox(height: 8),
                 Wrap(
                   spacing: 4,
                   runSpacing: 4,
-                  children: note.tags.take(2).map((tag) {
+                  children: note.tags.take(3).map((tag) {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.black.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         tag,
-                        style: const TextStyle(fontSize: 10, color: Colors.black54),
+                        style: const TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.w500),
                       ),
                     );
                   }).toList(),
                 ),
+                const SizedBox(height: 8),
               ],
-              const Spacer(),
-              if (note.todoItems.isNotEmpty)
-                Text(
-                  '${note.todoItems.where((item) => item.isCompleted).length}/${note.todoItems.length}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black54,
+              // Todo list highlight - prominent display
+              if (hasTodos) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        size: 18,
+                        color: completedTodos == totalTodos 
+                            ? Colors.green[700] 
+                            : Colors.black54,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '$completedTodos / $totalTodos completed',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 8),
+              ],
+              // Preview text
+              if (preview.isNotEmpty) ...[
+                Expanded(
+                  child: Text(
+                    preview,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
+                    maxLines: hasTodos ? 2 : 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ] else if (!hasTodos)
+                const Spacer(),
+              // Date
+              Text(
+                _formatDate(note.updatedAt),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ),
