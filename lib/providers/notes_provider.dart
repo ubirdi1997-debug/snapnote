@@ -15,9 +15,11 @@ class NotesProvider with ChangeNotifier {
     if (_searchQuery.isEmpty) {
       return _notes;
     }
+    final query = _searchQuery.toLowerCase();
     return _notes
         .where((note) =>
-            note.content.toLowerCase().contains(_searchQuery.toLowerCase()))
+            note.title.toLowerCase().contains(query) ||
+            note.body.toLowerCase().contains(query))
         .toList();
   }
 
@@ -30,7 +32,13 @@ class NotesProvider with ChangeNotifier {
 
   void loadNotes() {
     _notes = _storageService.getAllNotes();
-    _notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    // Sort: pinned first, then by updated date
+    _notes.sort((a, b) {
+      if (a.isPinned != b.isPinned) {
+        return a.isPinned ? -1 : 1;
+      }
+      return b.updatedAt.compareTo(a.updatedAt);
+    });
     notifyListeners();
   }
 
