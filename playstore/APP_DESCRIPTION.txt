@@ -1,0 +1,86 @@
+SHORT DESCRIPTION (80 characters max):
+Capture notes with voice, camera, or text. Fully offline. Privacy-first.
+
+FULL DESCRIPTION (4000 characters max):
+
+SnapNote Voice - Your Privacy-First Note Taking Companion
+
+Capture your thoughts, ideas, and important information instantly with SnapNote Voice - a fully offline note-taking app designed with privacy at its core.
+
+✨ KEY FEATURES
+
+📝 Multiple Input Methods
+• Type notes directly with a clean, distraction-free editor
+• Record voice notes with offline speech-to-text conversion
+• Scan text from images using advanced offline OCR technology
+
+🔒 Complete Privacy
+• 100% offline - No internet connection required
+• No data collection - We don't track, analyze, or share your data
+• No cloud sync - All your notes stay on your device
+• No ads - Clean, uninterrupted experience
+• No background services - Respects your device resources
+
+💾 Local Storage
+• All notes stored securely on your device
+• Fast search across all your notes
+• Sort by date (newest first)
+• Easy editing and deletion
+
+🎨 Beautiful Design
+• Material 3 design with modern, flat UI
+• Light and dark mode support
+• Clean, intuitive interface
+• Smooth, responsive experience
+
+🚀 Simple & Fast
+• Open directly to your notes
+• Quick access to voice and camera features
+• Long-press to delete notes
+• Instant search functionality
+
+📱 Permissions
+• Microphone: Only for voice note recording (offline processing)
+• Camera: Only for text scanning from images (offline OCR)
+
+WHY SNAPNOTE VOICE?
+
+Privacy Matters: In an era of data breaches and privacy concerns, SnapNote Voice gives you complete control. Your notes never leave your device.
+
+Offline First: Works perfectly without internet. Capture notes anywhere, anytime - even in areas with poor connectivity.
+
+Multiple Ways to Capture: Whether you prefer typing, speaking, or scanning, SnapNote Voice adapts to your workflow.
+
+Simple & Focused: No clutter, no distractions. Just a clean interface for capturing and managing your notes.
+
+PERFECT FOR:
+• Quick note-taking on the go
+• Voice memos and reminders
+• Scanning documents and receipts
+• Journaling and personal notes
+• Meeting notes and ideas
+• Shopping lists
+• Any situation where you need to capture information quickly and privately
+
+TECHNICAL DETAILS:
+• Built with Flutter for smooth performance
+• Uses offline ML Kit for text recognition
+• Offline speech-to-text processing
+• Local database storage (Hive)
+• Material 3 design system
+
+PRIVACY COMMITMENT:
+We believe your notes are private. That's why SnapNote Voice:
+• Never connects to the internet
+• Never collects analytics
+• Never shares your data
+• Never shows ads
+• Stores everything locally on your device
+
+Download SnapNote Voice today and experience note-taking the way it should be - simple, fast, and completely private.
+
+---
+
+Developed by MINORMEND CONSTRUCTION PRIVATE LIMITED
+For support: minormendcon1997@gmail.com
+

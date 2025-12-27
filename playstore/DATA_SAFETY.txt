@@ -1,0 +1,115 @@
+GOOGLE PLAY DATA SAFETY FORM INFORMATION
+==========================================
+
+APP NAME: SnapNote Voice
+PACKAGE: com.snapnote.voice
+
+==========================================
+DATA COLLECTION
+==========================================
+
+DOES YOUR APP COLLECT DATA?
+Answer: NO
+
+We do NOT collect any data. The app operates completely offline.
+
+==========================================
+DATA SHARING
+==========================================
+
+DOES YOUR APP SHARE DATA?
+Answer: NO
+
+We do NOT share any data with third parties.
+
+==========================================
+DATA SECURITY
+==========================================
+
+HOW DO YOU SECURE USER DATA?
+Answer: All data is stored locally on the device using local database storage.
+No data is transmitted over the internet.
+
+==========================================
+DATA DELETION
+==========================================
+
+CAN USERS REQUEST DATA DELETION?
+Answer: Users can delete all data by:
+1. Deleting notes within the app
+2. Clearing app data in device settings
+3. Uninstalling the app
+
+All data is stored locally and can be completely removed by the user.
+
+==========================================
+PERMISSIONS EXPLANATION
+==========================================
+
+MICROPHONE PERMISSION:
+- Purpose: Voice note recording and speech-to-text conversion
+- Data Handling: Audio is processed locally on device using offline speech recognition
+- Data Transmission: NONE - All processing is offline
+- Data Storage: Only transcribed text is stored locally in notes
+
+CAMERA PERMISSION:
+- Purpose: Image capture for text extraction via OCR
+- Data Handling: Images processed locally using offline ML Kit OCR
+- Data Transmission: NONE - All processing is offline
+- Data Storage: Images are temporarily stored for processing, then immediately deleted. Only extracted text is saved in notes.
+
+==========================================
+THIRD-PARTY SERVICES
+==========================================
+
+GOOGLE ML KIT TEXT RECOGNITION:
+- Usage: Offline OCR for text extraction from images
+- Data Transmission: NONE - All processing occurs locally on device
+- Data Collection: NONE - No data is sent to Google
+
+SPEECH-TO-TEXT:
+- Usage: Offline speech recognition for voice notes
+- Data Transmission: NONE - All processing occurs locally on device
+- Data Collection: NONE - No audio data is transmitted
+
+==========================================
+COMPLIANCE
+==========================================
+
+GDPR COMPLIANCE:
+✅ No personal data collection
+✅ No data processing outside device
+✅ Users have full control over their data
+✅ Data can be deleted at any time
+
+CCPA COMPLIANCE:
+✅ No sale of personal information
+✅ No sharing of personal information
+✅ No collection of personal information
+
+COPPA COMPLIANCE:
+✅ No data collection from children
+✅ App is safe for all ages
+✅ No targeted advertising
+
+==========================================
+PRIVACY POLICY URL
+==========================================
+
+[You will need to host the privacy policy HTML file and provide the URL here]
+
+Example: https://yourwebsite.com/snapnote-voice-privacy-policy.html
+
+==========================================
+SUPPORT EMAIL
+==========================================
+
+minormendcon1997@gmail.com
+
+==========================================
+COMPANY INFORMATION
+==========================================
+
+Company Name: MINORMEND CONSTRUCTION PRIVATE LIMITED
+Support Email: minormendcon1997@gmail.com
+

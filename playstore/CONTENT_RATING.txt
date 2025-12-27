@@ -1,0 +1,78 @@
+GOOGLE PLAY CONTENT RATING QUESTIONNAIRE
+==========================================
+
+APP NAME: SnapNote Voice
+PACKAGE: com.snapnote.voice
+CATEGORY: Productivity / Tools
+
+==========================================
+CONTENT QUESTIONS
+==========================================
+
+1. Does your app contain violence?
+Answer: NO
+
+2. Does your app contain sexual content?
+Answer: NO
+
+3. Does your app contain profanity or crude humor?
+Answer: NO
+
+4. Does your app contain references to alcohol, tobacco, or drugs?
+Answer: NO
+
+5. Does your app contain gambling or betting?
+Answer: NO
+
+6. Does your app contain scary or horror themes?
+Answer: NO
+
+7. Does your app contain user-generated content?
+Answer: NO
+Note: Users create their own notes, but this is private local content, not shared content.
+
+8. Does your app contain social features (chat, forums, etc.)?
+Answer: NO
+
+9. Does your app contain location sharing?
+Answer: NO
+
+10. Does your app contain in-app purchases?
+Answer: NO
+
+11. Does your app contain advertisements?
+Answer: NO
+
+12. Does your app collect personal information?
+Answer: NO
+
+13. Does your app share personal information?
+Answer: NO
+
+14. Does your app require internet connection?
+Answer: NO
+
+15. Does your app contain links to external websites?
+Answer: NO
+
+==========================================
+RECOMMENDED RATING
+==========================================
+
+Based on the above answers:
+- Rating: EVERYONE
+- No content restrictions
+- Safe for all ages
+
+==========================================
+ADDITIONAL NOTES
+==========================================
+
+- App is completely offline
+- No user-generated content is shared
+- No social features
+- No external links
+- No advertisements
+- No in-app purchases
+- Privacy-focused design
+
